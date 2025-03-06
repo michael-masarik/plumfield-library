@@ -1,17 +1,29 @@
-const express = require("express");
-require("dotenv").config();
+const { google } = require("googleapis");
 
-const app = express();
-const port = process.env.PORT || 3000;
+// Load service account credentials from environment variable
+const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
 
-app.get("/", (req, res) => {
-  res.send("Hello, Render! Your OAuth app is running.");
+const auth = new google.auth.GoogleAuth({
+  credentials,
+  scopes: ["https://www.googleapis.com/auth/calendar"],
 });
 
-app.get("/oauth/callback", (req, res) => {
-  res.send("OAuth callback reached! Exchange the code here.");
-});
+const calendar = google.calendar({ version: "v3", auth });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Example function to add an event
+async function addEvent() {
+  const event = {
+    summary: "Test Event",
+    start: { dateTime: "2025-03-06T10:00:00-05:00" },
+    end: { dateTime: "2025-03-06T11:00:00-05:00" },
+  };
+
+  const response = await calendar.events.insert({
+    calendarId: "primary",
+    resource: event,
+  });
+
+  console.log("Event created:", response.data.htmlLink);
+}
+
+addEvent();
